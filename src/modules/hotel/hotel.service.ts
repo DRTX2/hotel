@@ -18,7 +18,7 @@ export class HotelService {
     try {
       const hotel = this.hotelRepository.create(createHotelDto);
       const savedHotel = await this.hotelRepository.save(hotel);
-      this.logger.log(`Hotel creado: ${savedHotel.id}`);
+      this.logger.log(`Hotel creado: ${savedHotel.publicId}`);
       return savedHotel;
     } catch (error) {
       this.logger.error(`Error al crear hotel: ${error.message}`);
@@ -33,11 +33,11 @@ export class HotelService {
     });
   }
 
-  async findOne(id: string): Promise<Hotel> {
-    const hotel = await this.hotelRepository.findOne({ where: { id } });
+  async findOne(publicId: string): Promise<Hotel> {
+    const hotel = await this.hotelRepository.findOne({ where: { publicId } });
     if (!hotel) {
-      this.logger.warn(`Hotel no encontrado: ${id}`);
-      throw new NotFoundException(`Hotel con ID ${id} no encontrado`);
+      this.logger.warn(`Hotel no encontrado: ${publicId}`);
+      throw new NotFoundException(`Hotel con ID ${publicId} no encontrado`);
     }
     return hotel;
   }
@@ -50,17 +50,17 @@ export class HotelService {
     });
   }
 
-  async update(id: string, updateHotelDto: UpdateHotelDto): Promise<Hotel> {
-    const hotel = await this.findOne(id);
+  async update(publicId: string, updateHotelDto: UpdateHotelDto): Promise<Hotel> {
+    const hotel = await this.findOne(publicId);
     Object.assign(hotel, updateHotelDto);
     const updatedHotel = await this.hotelRepository.save(hotel);
-    this.logger.log(`Hotel actualizado: ${id}`);
+    this.logger.log(`Hotel actualizado: ${publicId}`);
     return updatedHotel;
   }
 
-  async remove(id: string): Promise<void> {
-    const hotel = await this.findOne(id);
+  async remove(publicId: string): Promise<void> {
+    const hotel = await this.findOne(publicId);
     await this.hotelRepository.remove(hotel);
-    this.logger.log(`Hotel eliminado: ${id}`);
+    this.logger.log(`Hotel eliminado: ${publicId}`);
   }
 }

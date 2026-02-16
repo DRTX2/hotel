@@ -11,8 +11,11 @@ import {
 @Index(['city'])
 @Index(['name', 'city'])
 export class Hotel {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column({type: 'uuid', unique: true})
+  publicId: string;
 
   @Column({ type: 'varchar', length: 255 })
   name: string;

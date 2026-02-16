@@ -1,36 +1,56 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
-import { BadRequestException, ValidationPipe } from '@nestjs/common';
+import { 
+  BadRequestException, 
+  ValidationPipe,
+  Logger
+} from '@nestjs/common';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  
+  const logger = new Logger('ValidationPipe');
 
   // Validación global
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
       transformOptions: {
-        enableImplicitConversion: false, //conversiones explicitas
-        excludeExtraneousValues: true, //excluir propiedades no definidas en DTOs
+        enableImplicitConversion: false,
+        excludeExtraneousValues: true,
       },
       whitelist: true,
-      forbidNonWhitelisted: true, // error si se envían propiedades no definidas en DTOs
-      forbidUnknownValues: true, // error si se envían valores no válidos (ej. string en lugar de number)
+      forbidNonWhitelisted: true,
+      forbidUnknownValues: true,
       validationError: {
-        target: false, // no exponer objetos completos
-        value: false, // no incluir el valor que falló en el error
+        target: false,
+        value: false,
       },
       exceptionFactory: (errors) => {
-        // Logging estructurado para debugging
-        console.error('Validation failed:', JSON.stringify(errors));
+        // Logging estructurado SIN depender del request
+        logger.error({
+          event: 'VALIDATION_ERROR',
+          timestamp: new Date().toISOString(),
+          // Como no podemos acceder al request aquí, usamos un ID generado o null
+          correlationId: 'N/A', // O se podría usar async_hooks para esto
+          errors: errors.map((e) => ({
+            field: e.property,
+            attemptedValue: e.value,
+            constraints: e.constraints,
+            target: e.target?.constructor?.name,
+          })),
+        });
 
+        // Respuesta al cliente (limpia y segura)
         return new BadRequestException({
           statusCode: 400,
           message: 'Validation failed',
+          code: 'ERR_VALIDATION',
+          timestamp: new Date().toISOString(),
           errors: errors.map((e) => ({
             field: e.property,
-            constraints: e.constraints,
+            messages: Object.values(e.constraints || []),
           })),
         });
       },
@@ -39,6 +59,7 @@ async function bootstrap() {
 
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
-  console.log(`🚀 Application is running on: http://localhost:${port}`);
+  
+  logger.log(`🚀 Application is running on: http://localhost:${port}`);
 }
 bootstrap();

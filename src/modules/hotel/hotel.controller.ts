@@ -9,7 +9,7 @@ import {
   Query,
   HttpCode,
   HttpStatus,
-  ValidationPipe,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { HotelService } from './hotel.service';
 import { Hotel } from './entities/hotel.entity';
@@ -21,7 +21,7 @@ export class HotelController {
   constructor(private readonly hotelService: HotelService) {}
 
   @Post()
-  create(@Body(ValidationPipe) createHotelDto: CreateHotelDto): Promise<Hotel> {
+  create(@Body() createHotelDto: CreateHotelDto): Promise<Hotel> {
     return this.hotelService.create(createHotelDto);
   }
 
@@ -35,22 +35,22 @@ export class HotelController {
     return this.hotelService.findByCity(city);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string): Promise<Hotel> {
-    return this.hotelService.findOne(id);
+  @Get('publicId')
+  findOne(@Param('publicId', ParseUUIDPipe) publicId: string): Promise<Hotel> {
+    return this.hotelService.findOne(publicId);
   }
 
-  @Patch(':id')
+  @Patch(':publicId')
   update(
-    @Param('id') id: string,
-    @Body(ValidationPipe) updateHotelDto: UpdateHotelDto,
+    @Param('publicId', ParseUUIDPipe) publicId: string   ,
+    @Body() updateHotelDto: UpdateHotelDto,
   ): Promise<Hotel> {
-    return this.hotelService.update(id, updateHotelDto);
+    return this.hotelService.update(publicId, updateHotelDto);
   }
 
-  @Delete(':id')
+  @Delete(':publicId')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id') id: string): Promise<void> {
-    return this.hotelService.remove(id);
+  remove(@Param('publicId', ParseUUIDPipe) publicId: string): Promise<void> {
+    return this.hotelService.remove(publicId);
   }
 }
