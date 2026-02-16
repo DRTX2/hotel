@@ -23,6 +23,14 @@ import { HotelService } from './hotel.service';
 import { Hotel } from './entities/hotel.entity';
 import { CreateHotelDto } from './dto/create-hotel.dto';
 import { UpdateHotelDto } from './dto/update-hotel.dto';
+import {
+  HotelResponseDto,
+  PaginatedHotelResponseDto,
+} from './dto/hotel-response.dto';
+import {
+  PaginationDto,
+  PaginatedResult,
+} from '../../common/dto/pagination.dto';
 
 @ApiTags('hotels')
 @Controller('hotels')
@@ -35,23 +43,25 @@ export class HotelController {
   @ApiResponse({
     status: 201,
     description: 'Hotel creado exitosamente',
-    type: Hotel,
+    type: HotelResponseDto,
   })
   @ApiResponse({ status: 400, description: 'Datos de entrada inválidos' })
   @ApiBody({ type: CreateHotelDto })
-  create(@Body() createHotelDto: CreateHotelDto): Promise<Hotel> {
+  create(@Body() createHotelDto: CreateHotelDto): Promise<HotelResponseDto> {
     return this.hotelService.create(createHotelDto);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Obtener todos los hoteles' })
+  @ApiOperation({ summary: 'Obtener lista paginada de hoteles' })
   @ApiResponse({
     status: 200,
-    description: 'Lista de hoteles',
-    type: [Hotel],
+    description: 'Lista de hoteles con metadatos de paginación',
+    type: PaginatedHotelResponseDto,
   })
-  findAll(): Promise<Hotel[]> {
-    return this.hotelService.findAll();
+  findAll(
+    @Query() paginationDto: PaginationDto,
+  ): Promise<PaginatedResult<HotelResponseDto>> {
+    return this.hotelService.findAll(paginationDto);
   }
 
   @Get('search/city')
@@ -60,10 +70,10 @@ export class HotelController {
   @ApiResponse({
     status: 200,
     description: 'Lista de hoteles en la ciudad especificada',
-    type: [Hotel],
+    type: [HotelResponseDto],
   })
   @ApiResponse({ status: 400, description: 'Parámetro city requerido' })
-  findByCity(@Query('city') city: string): Promise<Hotel[]> {
+  findByCity(@Query('city') city: string): Promise<HotelResponseDto[]> {
     return this.hotelService.findByCity(city);
   }
 
@@ -73,10 +83,12 @@ export class HotelController {
   @ApiResponse({
     status: 200,
     description: 'Hotel encontrado',
-    type: Hotel,
+    type: HotelResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Hotel no encontrado' })
-  findOne(@Param('publicId', ParseUUIDPipe) publicId: string): Promise<Hotel> {
+  findOne(
+    @Param('publicId', ParseUUIDPipe) publicId: string,
+  ): Promise<HotelResponseDto> {
     return this.hotelService.findOne(publicId);
   }
 
@@ -86,7 +98,7 @@ export class HotelController {
   @ApiResponse({
     status: 200,
     description: 'Hotel actualizado exitosamente',
-    type: Hotel,
+    type: HotelResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Hotel no encontrado' })
   @ApiResponse({ status: 400, description: 'Datos de entrada inválidos' })
@@ -94,7 +106,7 @@ export class HotelController {
   update(
     @Param('publicId', ParseUUIDPipe) publicId: string,
     @Body() updateHotelDto: UpdateHotelDto,
-  ): Promise<Hotel> {
+  ): Promise<HotelResponseDto> {
     return this.hotelService.update(publicId, updateHotelDto);
   }
 

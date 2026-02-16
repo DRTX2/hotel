@@ -4,6 +4,7 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
   Index,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
@@ -23,7 +24,7 @@ export class Hotel {
     description: 'ID público único del hotel',
     example: '550e8400-e29b-41d4-a716-446655440000',
   })
-  @Column({type: 'uuid', unique: true})
+  @Column({ type: 'uuid', unique: true })
   publicId: string;
 
   @ApiProperty({
@@ -70,4 +71,12 @@ export class Hotel {
   })
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @ApiProperty({
+    description: 'Fecha de eliminación lógica del hotel',
+    example: '2024-01-15T10:30:00Z',
+    required: false,
+  })
+  @DeleteDateColumn()
+  deletedAt?: Date;
 }

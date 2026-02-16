@@ -1,70 +1,58 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
-import {
-  BadRequestException,
-  ValidationPipe,
-  Logger
-} from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import { AppModule } from './app.module';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  const logger = new Logger('ValidationPipe');
+  const logger = new Logger('Bootstrap');
 
-  // Configuración de Swagger
+  // 🛡️ Seguridad
+  app.use(helmet());
+  app.enableCors(); // Configura esto adecuadamente para prod
+  app.use(
+    rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutos
+      max: 100, // limita cada IP a 100 peticiones por ventana
+      message:
+        'Demasiadas peticiones desde esta IP, por favor intente después de 15 minutos',
+    }),
+  );
+
+  // 📝 Configuración de Swagger
   const config = new DocumentBuilder()
     .setTitle('Hotel API')
     .setDescription('API para gestión de hoteles')
     .setVersion('1.0')
-    .addTag('hotels', 'Operaciones relacionadas con hoteles')
+    .addBearerAuth() // Si añades JWT después
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  // Validación global
+  // 🌐 Prefijo Global
+  app.setGlobalPrefix('v1');
+
+  // 🚦 Filtro Global de Excepciones
+  app.useGlobalFilters(new AllExceptionsFilter());
+
+  // 📡 Interceptor Global de Logging
+  app.useGlobalInterceptors(new LoggingInterceptor());
+
+  // ✅ Validación global corregida
   app.useGlobalPipes(
     new ValidationPipe({
-      transform: true,
-      transformOptions: {
-        enableImplicitConversion: false,
-        excludeExtraneousValues: true,
-      },
       whitelist: true,
       forbidNonWhitelisted: true,
-      forbidUnknownValues: true,
-      validationError: {
-        target: false,
-        value: false,
-      },
-      exceptionFactory: (errors) => {
-        // Logging estructurado SIN depender del request
-        logger.error({
-          event: 'VALIDATION_ERROR',
-          timestamp: new Date().toISOString(),
-          // Como no podemos acceder al request aquí, usamos un ID generado o null
-          correlationId: 'N/A', // O se podría usar async_hooks para esto
-          errors: errors.map((e) => ({
-            field: e.property,
-            attemptedValue: e.value,
-            constraints: e.constraints,
-            target: e.target?.constructor?.name,
-          })),
-        });
-
-        // Respuesta al cliente (limpia y segura)
-        return new BadRequestException({
-          statusCode: 400,
-          message: 'Validation failed',
-          code: 'ERR_VALIDATION',
-          timestamp: new Date().toISOString(),
-          errors: errors.map((e) => ({
-            field: e.property,
-            messages: Object.values(e.constraints || []),
-          })),
-        });
+      transform: true,
+      transformOptions: {
+        enableImplicitConversion: true, // Crucial para que Swagger y JSON funcionen bien
       },
     }),
   );
@@ -72,7 +60,9 @@ async function bootstrap() {
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
 
-  logger.log(`🚀 Application is running on: http://localhost:${port}`);
-  logger.log(`📚 Swagger documentation available at: http://localhost:${port}/api`);
+  logger.log(`🚀 Application is running on: http://localhost:${port}/v1`);
+  logger.log(
+    `📚 Swagger documentation available at: http://localhost:${port}/api`,
+  );
 }
 bootstrap();
