@@ -1,3 +1,4 @@
 data "http" "myip" {
-  url = "http://ifconfig.me/ip"
+  url = "https://ipv4.icanhazip.com"
 }
+

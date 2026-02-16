@@ -20,6 +20,7 @@ resource "aws_instance" "nestjs" {
 
   key_name = aws_key_pair.default.key_name
 
+  subnet_id = aws_subnet.public.id
   vpc_security_group_ids = [aws_security_group.nestjs_sg.id]
 
   root_block_device {

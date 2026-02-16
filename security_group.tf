@@ -1,6 +1,8 @@
 resource "aws_security_group" "nestjs_sg" {
   name = "nestjs-sg"
   description = "Security group for NestJS API"
+  #  vpc_id = data.aws_vpc.default.id
+  vpc_id = aws_vpc.main.id
 
   tags= {
     Name = "nestjs-sg"
@@ -14,6 +16,7 @@ resource "aws_security_group" "nestjs_sg" {
     to_port = 22
     protocol = "tcp"
     cidr_blocks = ["${chomp(data.http.myip.response_body)}/32"]
+    
   }
 
   # api - public but with https using load balancer
