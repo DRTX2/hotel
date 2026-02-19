@@ -5,6 +5,9 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { typeOrmConfig } from './config/typeorm.config';
 import { HotelModule } from './modules/hotel/hotel.module';
+import { RoomModule } from './room/room.module';
+import { ReservationModule } from './reservation/reservation.module';
+import { GuestModule } from './guest/guest.module';
 
 @Module({
   imports: [
@@ -14,6 +17,9 @@ import { HotelModule } from './modules/hotel/hotel.module';
     }),
     TypeOrmModule.forRoot(typeOrmConfig()),
     HotelModule,
+    RoomModule,
+    ReservationModule,
+    GuestModule,
   ],
   controllers: [AppController],
   providers: [AppService],
