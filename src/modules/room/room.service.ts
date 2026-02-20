@@ -98,8 +98,9 @@ export class RoomService {
     const room = await this.roomRepository.findOne({ where: { publicId } });
     if (!room) {
       this.logger.warn(`Habitación no encontrada: ID ${publicId}`);
-      return;
+      throw new NotFoundException(`Habitación con ID ${publicId} no encontrada`);
     }
-    await this.roomRepository.remove(room);
+    await this.roomRepository.softRemove(room);
+    this.logger.log(`Habitación eliminada (soft): ${publicId}`);
   }
 }

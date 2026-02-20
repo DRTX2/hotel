@@ -1,4 +1,4 @@
-import { Entity, Column, ManyToOne, Index } from 'typeorm';
+import { Entity, Column, ManyToOne, Index, JoinColumn } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { BaseEntity } from '../../../common/entities/base.entity';
 import { Room } from '../../room/entities/room.entity';
@@ -38,9 +38,23 @@ export class Reservation extends BaseEntity {
   @Column({ type: 'int', default: 0 })
   totalPrice: number;
 
-  @ManyToOne(() => Room, (room) => room.reservations)
+  @ManyToOne(() => Room, (room) => room.reservations, {
+    nullable: false,
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'roomId' })
   room: Room;
 
-  @ManyToOne(() => Guest, (guest) => guest.reservations)
+  @Column()
+  roomId: number;
+
+  @ManyToOne(() => Guest, (guest) => guest.reservations, {
+    nullable: false,
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'guestId' })
   guest: Guest;
+
+  @Column()
+  guestId: number;
 }
