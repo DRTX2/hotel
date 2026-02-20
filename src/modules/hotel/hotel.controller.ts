@@ -25,7 +25,6 @@ import { CreateHotelDto } from './dto/create-hotel.dto';
 import { UpdateHotelDto } from './dto/update-hotel.dto';
 import {
   HotelResponseDto,
-  PaginatedHotelResponseDto,
 } from './dto/hotel-response.dto';
 import {
   PaginationDto,
@@ -56,7 +55,7 @@ export class HotelController {
   @ApiResponse({
     status: 200,
     description: 'Lista de hoteles con metadatos de paginación',
-    type: PaginatedHotelResponseDto,
+    type: PaginatedResult<HotelResponseDto>,
   })
   findAll(
     @Query() paginationDto: PaginationDto,

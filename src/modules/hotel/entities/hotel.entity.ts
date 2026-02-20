@@ -1,34 +1,17 @@
 import {
   Entity,
-  PrimaryGeneratedColumn,
   Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-  DeleteDateColumn,
-  Generated,
   Index,
+  OneToMany,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
+import { BaseEntity } from '../../../common/entities/base.entity';
+import { Room } from '../../room/entities/room.entity';
 
 @Entity('hotels')
 @Index(['city'])
 @Index(['name', 'city'])
-export class Hotel {
-  @ApiProperty({
-    description: 'ID interno del hotel',
-    example: 1,
-  })
-  @PrimaryGeneratedColumn()
-  id: number;
-
-  @ApiProperty({
-    description: 'ID público único del hotel',
-    example: '550e8400-e29b-41d4-a716-446655440000',
-  })
-  @Column({ type: 'uuid', unique: true })
-  @Generated('uuid')
-  publicId: string;
-
+export class Hotel extends BaseEntity {
   @ApiProperty({
     description: 'Nombre del hotel',
     example: 'Hotel Central Madrid',
@@ -49,7 +32,7 @@ export class Hotel {
     required: false,
   })
   @Column({ type: 'text', nullable: true })
-  description: string;
+  description?: string;
 
   @ApiProperty({
     description: 'Calificación del hotel (0-5)',
@@ -60,25 +43,6 @@ export class Hotel {
   @Column({ type: 'decimal', precision: 3, scale: 2, default: 0 })
   rating: number;
 
-  @ApiProperty({
-    description: 'Fecha de creación del hotel',
-    example: '2024-01-15T10:30:00Z',
-  })
-  @CreateDateColumn()
-  createdAt: Date;
-
-  @ApiProperty({
-    description: 'Fecha de última actualización del hotel',
-    example: '2024-01-15T10:30:00Z',
-  })
-  @UpdateDateColumn()
-  updatedAt: Date;
-
-  @ApiProperty({
-    description: 'Fecha de eliminación lógica del hotel',
-    example: '2024-01-15T10:30:00Z',
-    required: false,
-  })
-  @DeleteDateColumn()
-  deletedAt?: Date;
+  @OneToMany(() => Room, (room) => room.hotel)
+  rooms: Room[];
 }

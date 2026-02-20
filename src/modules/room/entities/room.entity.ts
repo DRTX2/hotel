@@ -1,0 +1,71 @@
+import {
+  Entity,
+  Column,
+  ManyToOne,
+  OneToMany,
+  Index,
+} from 'typeorm';
+import { ApiProperty } from '@nestjs/swagger';
+import { BaseEntity } from '../../../common/entities/base.entity';
+import { Hotel } from '../../hotel/entities/hotel.entity';
+import { Reservation } from '../../reservation/entities/reservation.entity';
+
+export enum RoomType {
+  SINGLE = 'SINGLE',
+  DOUBLE = 'DOUBLE',
+  SUITE = 'SUITE',
+}
+
+export enum RoomStatus {
+  AVAILABLE = 'AVAILABLE',
+  OCCUPIED = 'OCCUPIED',
+  MAINTENANCE = 'MAINTENANCE',
+}
+
+@Entity('rooms')
+export class Room extends BaseEntity {
+  @ApiProperty({
+    description: 'Número de habitación o identificador',
+    example: '101A',
+  })
+  @Column({ type: 'varchar', length: 50 })
+  @Index()
+  number: string;
+
+  @ApiProperty({
+    description: 'Estado de la habitación',
+    enum: RoomStatus,
+    default: RoomStatus.AVAILABLE,
+  })
+  @Column({
+    type: 'enum',
+    enum: RoomStatus,
+    default: RoomStatus.AVAILABLE,
+  })
+  status: RoomStatus;
+
+  @ApiProperty({
+    description: 'Tipo de habitación',
+    enum: RoomType,
+    default: RoomType.SINGLE,
+  })
+  @Column({
+    type: 'enum',
+    enum: RoomType,
+    default: RoomType.SINGLE,
+  })
+  type: RoomType;
+
+  @ApiProperty({
+    description: 'Precio base por noche',
+    example: 100,
+  })
+  @Column({ type: 'int' })
+  basePrice: number;
+
+  @ManyToOne(() => Hotel, (hotel) => hotel.rooms)
+  hotel: Hotel;
+
+  @OneToMany(() => Reservation, (reservation) => reservation.room)
+  reservations: Reservation[];
+}

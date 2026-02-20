@@ -5,9 +5,9 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { typeOrmConfig } from './config/typeorm.config';
 import { HotelModule } from './modules/hotel/hotel.module';
-import { RoomModule } from './room/room.module';
-import { ReservationModule } from './reservation/reservation.module';
-import { GuestModule } from './guest/guest.module';
+import { RoomModule } from './modules/room/room.module';
+import { ReservationModule } from './modules/reservation/reservation.module';
+import { GuestModule } from './modules/guest/guest.module';
 
 @Module({
   imports: [

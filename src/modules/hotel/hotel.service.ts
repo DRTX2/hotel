@@ -65,14 +65,22 @@ export class HotelService {
   }
 
   async findOne(publicId: string): Promise<HotelResponseDto> {
+    const hotel = await this.findOneEntity(publicId);
+    return plainToInstance(HotelResponseDto, hotel, {
+      excludeExtraneousValues: true,
+    });
+  }
+
+  /**
+   * Uso interno para otros servicios que necesiten la entidad real con sus relaciones
+   */
+  async findOneEntity(publicId: string): Promise<Hotel> {
     const hotel = await this.hotelRepository.findOne({ where: { publicId } });
     if (!hotel) {
       this.logger.warn(`Hotel no encontrado: ${publicId}`);
       throw new NotFoundException(`Hotel con ID ${publicId} no encontrado`);
     }
-    return plainToInstance(HotelResponseDto, hotel, {
-      excludeExtraneousValues: true,
-    });
+    return hotel;
   }
 
   async findByCity(city: string): Promise<HotelResponseDto[]> {

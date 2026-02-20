@@ -1,6 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import { PaginationMetaDto } from '../../../common/dto/pagination.dto';
 
 export class HotelResponseDto {
   @ApiProperty({
@@ -53,12 +52,11 @@ export class HotelResponseDto {
   })
   @Expose()
   updatedAt: Date;
-}
 
-export class PaginatedHotelResponseDto {
-  @ApiProperty({ type: [HotelResponseDto] })
-  data: HotelResponseDto[];
-
-  @ApiProperty({ type: PaginationMetaDto })
-  meta: PaginationMetaDto;
+  @ApiPropertyOptional({
+    description: 'Fecha de eliminación lógica del hotel (soft delete)',
+    example: '2024-01-15T10:30:00Z',
+  })
+  @Expose()
+  deletedAt?: Date;
 }
