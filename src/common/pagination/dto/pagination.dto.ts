@@ -14,8 +14,6 @@ export class PaginationDto {
   @Min(1)
   page?: number = 1;
 
-
-
   @ApiPropertyOptional({
     description: 'Cantidad de elementos por página',
     default: 10,
@@ -27,21 +25,4 @@ export class PaginationDto {
   @Min(1)
   @Max(50)
   limit?: number = 10;
-
-}
-
-export class PaginationMetaDto {
-  @ApiProperty()
-  total: number;
-
-  @ApiProperty()
-  page: number;
-
-  @ApiProperty()
-  lastPage: number;
-}
-
-export class PaginatedResult<T> {
-  data: T[];
-  meta: PaginationMetaDto;
 }

@@ -1,8 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { typeOrmConfig } from './config/typeorm.config';
 import { HotelModule } from './modules/hotel/hotel.module';
 import { RoomModule } from './modules/room/room.module';
@@ -13,7 +11,7 @@ import { GuestModule } from './modules/guest/guest.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env',
+      envFilePath: '.env', // no siempre se usa, ya que puede haber vars del SO
     }),
     TypeOrmModule.forRoot(typeOrmConfig()),
     HotelModule,
@@ -21,7 +19,7 @@ import { GuestModule } from './modules/guest/guest.module';
     ReservationModule,
     GuestModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}

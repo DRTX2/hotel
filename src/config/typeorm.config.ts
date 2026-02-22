@@ -12,9 +12,11 @@ export const typeOrmConfig = (): TypeOrmModuleOptions => {
     database: process.env.DB_NAME || 'hotel_db',
     entities: [__dirname + '/../modules/**/*.entity{.ts,.js}'],
     migrations: [__dirname + '/../migrations/*{.ts,.js}'],
-    migrationsRun: false,
-    synchronize: !isProduction,
+    migrationsTableName: 'migrations_history',
+    // synchronize: false en todos los entornos — las migraciones son la fuente de verdad
+    synchronize: false,
+    migrationsRun: true, // ejecuta migraciones pendientes al iniciar la app
     logging: !isProduction,
-    ssl: isProduction,
+    ssl: isProduction ? { rejectUnauthorized: false } : false,
   };
 };

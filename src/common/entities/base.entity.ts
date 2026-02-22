@@ -9,7 +9,7 @@ import {
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 
-export abstract class BaseEntity {
+export abstract class BaseEntity { // ver si mejor lo elimino
   @ApiProperty({
     description: 'ID interno del registro',
     example: 1,
