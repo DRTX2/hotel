@@ -6,10 +6,9 @@ import { Hotel } from './entities/hotel.entity';
 import { CreateHotelDto } from './dto/create-hotel.dto';
 import { UpdateHotelDto } from './dto/update-hotel.dto';
 import { HotelResponseDto } from './dto/hotel-response.dto';
-import {
-  PaginationDto,
-  PaginatedResult,
-} from '../../common/dto/pagination.dto';
+import { PaginationService } from '../../common/pagination/pagination.service';
+import { PaginationDto } from '../../common/pagination/dto/pagination.dto';
+import { PaginatedResult } from '../../common/pagination/dto/paginated-result.dto';
 
 @Injectable()
 export class HotelService {
@@ -18,49 +17,43 @@ export class HotelService {
   constructor(
     @InjectRepository(Hotel)
     private readonly hotelRepository: Repository<Hotel>,
+    private readonly paginationService: PaginationService,
   ) {}
 
   async create(createHotelDto: CreateHotelDto): Promise<HotelResponseDto> {
-    try {
       const hotel = this.hotelRepository.create(createHotelDto);
       const savedHotel = await this.hotelRepository.save(hotel);
       this.logger.log(`Hotel creado: ${savedHotel.publicId}`);
       return plainToInstance(HotelResponseDto, savedHotel, {
         excludeExtraneousValues: true,
       });
-    } catch (error) {
-      this.logger.error(`Error al crear hotel: ${error.message}`);
-      throw error;
-    }
   }
 
   async findAll(
     paginationDto: PaginationDto,
   ): Promise<PaginatedResult<HotelResponseDto>> {
-    const { page = 1, limit = 10 } = paginationDto;
-    const skip = (page - 1) * limit;
+    this.logger.log(
+      `Obteniendo hoteles: página ${paginationDto.page}, límite ${paginationDto.limit}`,
+    );
 
-    this.logger.log(`Obteniendo hoteles: página ${page}, límite ${limit}`);
+    const queryBuilder = this.hotelRepository
+      .createQueryBuilder('hotel')
+      .orderBy('hotel.createdAt', 'DESC');
 
-    const [hotels, total] = await this.hotelRepository.findAndCount({
-      skip,
-      take: limit,
-      order: { createdAt: 'DESC' },
-    });
+    const { data, meta } = await this.paginationService.paginate(
+      queryBuilder,
+      paginationDto,
+    );
 
-    const data = hotels.map((hotel) =>
+    const hotelsDto = data.map((hotel) =>
       plainToInstance(HotelResponseDto, hotel, {
         excludeExtraneousValues: true,
       }),
     );
 
     return {
-      data,
-      meta: {
-        total,
-        page,
-        lastPage: Math.ceil(total / limit),
-      },
+      data: hotelsDto,
+      meta,
     };
   }
 

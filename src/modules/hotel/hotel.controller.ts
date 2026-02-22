@@ -28,8 +28,10 @@ import {
 } from './dto/hotel-response.dto';
 import {
   PaginationDto,
+} from '../../common/pagination/dto/pagination.dto';
+import {
   PaginatedResult,
-} from '../../common/dto/pagination.dto';
+} from '../../common/pagination/dto/paginated-result.dto';
 
 @ApiTags('hotels')
 @Controller('hotels')

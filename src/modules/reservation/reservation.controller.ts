@@ -1,34 +1,45 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, ParseUUIDPipe, Query, HttpCode, HttpStatus } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { ReservationService } from './reservation.service';
 import { CreateReservationDto } from './dto/create-reservation.dto';
-import { UpdateReservationDto } from './dto/update-reservation.dto';
+import { ReservationResponseDto } from './dto/reservation-response.dto';
+import { PaginationDto } from '../../common/pagination/dto/pagination.dto';
+import { PaginatedResult } from '../../common/pagination/dto/paginated-result.dto';
 
-@Controller('reservation')
+@ApiTags('reservations')
+@Controller('reservations')
 export class ReservationController {
   constructor(private readonly reservationService: ReservationService) {}
 
   @Post()
-  create(@Body() createReservationDto: CreateReservationDto) {
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Crear una nueva reserva' })
+  @ApiResponse({ status: 201, type: ReservationResponseDto })
+  create(@Body() createReservationDto: CreateReservationDto): Promise<ReservationResponseDto> {
     return this.reservationService.create(createReservationDto);
   }
 
   @Get()
-  findAll() {
-    return this.reservationService.findAll();
+  @ApiOperation({ summary: 'Lista paginada de reservas' })
+  @ApiResponse({ status: 200, type: PaginatedResult<ReservationResponseDto> })
+  findAll(@Query() paginationDto: PaginationDto): Promise<PaginatedResult<ReservationResponseDto>> {
+    return this.reservationService.findAll(paginationDto);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.reservationService.findOne(+id);
+  @Get(':publicId')
+  @ApiOperation({ summary: 'Obtener reserva por ID' })
+  @ApiParam({ name: 'publicId', description: 'ID público de la reserva' })
+  @ApiResponse({ status: 200, type: ReservationResponseDto })
+  findOne(@Param('publicId', ParseUUIDPipe) publicId: string): Promise<ReservationResponseDto> {
+    return this.reservationService.findOne(publicId);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateReservationDto: UpdateReservationDto) {
-    return this.reservationService.update(+id, updateReservationDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.reservationService.remove(+id);
+  @Delete(':publicId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Eliminar una reserva (Soft Delete)' })
+  @ApiParam({ name: 'publicId', description: 'ID público de la reserva' })
+  @ApiResponse({ status: 204 })
+  remove(@Param('publicId', ParseUUIDPipe) publicId: string): Promise<void> {
+    return this.reservationService.remove(publicId);
   }
 }

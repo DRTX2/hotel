@@ -25,6 +25,4 @@ export class CreateRoomDto {
   @IsInt()
   @Min(1)
   basePrice: number;
-  
-  updatedAt: Date;
 }

@@ -6,7 +6,9 @@ import { Room } from './entities/room.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RoomResponseDto } from './dto/room-response.dto';
 import { plainToInstance } from 'class-transformer';
-import { PaginatedResult, PaginationDto } from '../../common/dto/pagination.dto';
+import { PaginationService } from '../../common/pagination/pagination.service';
+import { PaginationDto } from '../../common/pagination/dto/pagination.dto';
+import { PaginatedResult } from '../../common/pagination/dto/paginated-result.dto';
 import { HotelService } from '../hotel/hotel.service';
 
 @Injectable()
@@ -17,6 +19,7 @@ export class RoomService {
     @InjectRepository(Room)
     private readonly roomRepository: Repository<Room>,
     private readonly hotelService: HotelService,
+    private readonly paginationService: PaginationService,
   ) {}
 
   async create(createRoomDto: CreateRoomDto): Promise<RoomResponseDto> {
@@ -27,9 +30,11 @@ export class RoomService {
       ...roomData,
       hotel,
     });
-    
+
     const savedRoom = await this.roomRepository.save(room);
-    this.logger.log(`Habitación ${savedRoom.number} creada para el hotel ${hotelPublicId}`);
+    this.logger.log(
+      `Habitación ${savedRoom.number} creada para el hotel ${hotelPublicId}`,
+    );
 
     return plainToInstance(RoomResponseDto, savedRoom, {
       excludeExtraneousValues: true,
@@ -39,58 +44,63 @@ export class RoomService {
   async findAll(
     paginationDto: PaginationDto,
   ): Promise<PaginatedResult<RoomResponseDto>> {
-    const { page = 1, limit = 10 } = paginationDto;
-    const skip = (page - 1) * limit;
+    this.logger.log(
+      `Obteniendo habitaciones: página ${paginationDto.page}, límite ${paginationDto.limit}`,
+    );
 
-    this.logger.log(`Obteniendo habitaciones: página ${page}, límite ${limit}`);
+    const queryBuilder = this.roomRepository
+      .createQueryBuilder('room')
+      .leftJoinAndSelect('room.hotel', 'hotel')
+      .orderBy('room.createdAt', 'DESC');
 
-    const [rooms, total] = await this.roomRepository.findAndCount({
-      skip,
-      take: limit,
-      order: { createdAt: 'DESC' },
-    });
+    const { data, meta } = await this.paginationService.paginate(
+      queryBuilder,
+      paginationDto,
+    );
 
-    const data = rooms.map((room) =>
+    const roomsDto = data.map((room) =>
       plainToInstance(RoomResponseDto, room, {
         excludeExtraneousValues: true,
       }),
     );
 
     return {
-      data,
-      meta: {
-        total,
-        page,
-        lastPage: Math.ceil(total / limit),
-      },
+      data: roomsDto,
+      meta,
     };
   }
 
   async findOne(publicId: string): Promise<RoomResponseDto | null> {
-    const room = this.roomRepository.findOne({ where: { publicId } });
-    return room.then((room) => {
-      if (!room) {
-        this.logger.warn(`Habitación no encontrada: ID ${publicId}`);
-        return null;
-      }
-      return plainToInstance(RoomResponseDto, room, {
-        excludeExtraneousValues: true,
-      });
+    const room = await this.findOneEntity(publicId);
+    return plainToInstance(RoomResponseDto, room, {
+      excludeExtraneousValues: true,
     });
   }
 
-  async update(publicId: string, updateRoomDto: UpdateRoomDto):Promise<RoomResponseDto | null> {
-    const room = this.roomRepository.findOne({ where: { publicId } });
-    return room.then(async (room) => {
-      if (!room) {
-        this.logger.warn(`Habitación no encontrada: ID ${publicId}`);
-        return null;
-      }
-      this.roomRepository.merge(room, updateRoomDto);
-      const updatedRoom = await this.roomRepository.save(room);
-      return plainToInstance(RoomResponseDto, updatedRoom, {
-        excludeExtraneousValues: true,
-      });
+  async findOneEntity(publicId: string): Promise<Room> {
+    const room = await this.roomRepository.findOne({
+      where: { publicId },
+      relations: ['hotel'],
+    });
+    if (!room) {
+      this.logger.warn(`Habitación no encontrada: ID ${publicId}`);
+      throw new NotFoundException(
+        `Habitación con ID ${publicId} no encontrada`,
+      );
+    }
+    return room;
+  }
+
+  async update(
+    publicId: string,
+    updateRoomDto: UpdateRoomDto,
+  ): Promise<RoomResponseDto> {
+    const room = await this.findOneEntity(publicId);
+    this.roomRepository.merge(room, updateRoomDto);
+    const updatedRoom = await this.roomRepository.save(room);
+    this.logger.log(`Habitación actualizada: ${publicId}`);
+    return plainToInstance(RoomResponseDto, updatedRoom, {
+      excludeExtraneousValues: true,
     });
   }
 
@@ -98,7 +108,9 @@ export class RoomService {
     const room = await this.roomRepository.findOne({ where: { publicId } });
     if (!room) {
       this.logger.warn(`Habitación no encontrada: ID ${publicId}`);
-      throw new NotFoundException(`Habitación con ID ${publicId} no encontrada`);
+      throw new NotFoundException(
+        `Habitación con ID ${publicId} no encontrada`,
+      );
     }
     await this.roomRepository.softRemove(room);
     this.logger.log(`Habitación eliminada (soft): ${publicId}`);
