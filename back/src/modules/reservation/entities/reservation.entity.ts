@@ -13,21 +13,22 @@ export enum ReservationStatus {
 @Entity('reservations')
 export class Reservation extends BaseEntity {
   @ApiProperty({ description: 'Fecha de ingreso', example: '2024-05-01' })
-  @Column({ type: 'date' })
+  @Column({ name: 'check_in', type: 'date' })
   @Index()
   checkIn: string;
 
   @ApiProperty({ description: 'Fecha de salida', example: '2024-05-05' })
-  @Column({ type: 'date' })
+  @Column({ name: 'check_out', type: 'date' })
   @Index()
   checkOut: string;
 
   @ApiProperty({ description: 'Número de huéspedes', example: 2 })
-  @Column({ type: 'int', default: 1 })
+  @Column({ name: 'num_guests', type: 'int', default: 1 })
   numGuests: number;
 
   @ApiProperty({ description: 'Estado de la reserva', enum: ReservationStatus })
   @Column({
+    name: 'status',
     type: 'enum',
     enum: ReservationStatus,
     default: ReservationStatus.PENDING,
@@ -35,26 +36,26 @@ export class Reservation extends BaseEntity {
   status: ReservationStatus;
 
   @ApiProperty({ description: 'Precio total de la reserva', example: 450 })
-  @Column({ type: 'int', default: 0 })
+  @Column({ name: 'total_price', type: 'int', default: 0 })
   totalPrice: number;
 
   @ManyToOne(() => Room, (room) => room.reservations, {
     nullable: false,
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'roomId' })
+  @JoinColumn({ name: 'room_id' })
   room: Room;
 
-  @Column()
+  @Column({ name: 'room_id' })
   roomId: number;
 
   @ManyToOne(() => Guest, (guest) => guest.reservations, {
     nullable: false,
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'guestId' })
+  @JoinColumn({ name: 'guest_id' })
   guest: Guest;
 
-  @Column()
+  @Column({ name: 'guest_id' })
   guestId: number;
 }

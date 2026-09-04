@@ -29,7 +29,7 @@ export class Room extends BaseEntity {
     description: 'Número de habitación o identificador',
     example: '101A',
   })
-  @Column({ type: 'varchar', length: 50 })
+  @Column({ name: 'number', type: 'varchar', length: 50 })
   @Index()
   number: string;
 
@@ -39,6 +39,7 @@ export class Room extends BaseEntity {
     default: RoomStatus.AVAILABLE,
   })
   @Column({
+    name: 'status',
     type: 'enum',
     enum: RoomStatus,
     default: RoomStatus.AVAILABLE,
@@ -51,6 +52,7 @@ export class Room extends BaseEntity {
     default: RoomType.SINGLE,
   })
   @Column({
+    name: 'type',
     type: 'enum',
     enum: RoomType,
     default: RoomType.SINGLE,
@@ -61,17 +63,24 @@ export class Room extends BaseEntity {
     description: 'Precio base por noche',
     example: 100,
   })
-  @Column({ type: 'int' })
+  @Column({ name: 'base_price', type: 'int' })
   basePrice: number;
+
+  @ApiProperty({
+    description: 'Capacidad máxima de huéspedes',
+    example: 2,
+  })
+  @Column({ name: 'capacity', type: 'int' })
+  capacity: number;
 
   @ManyToOne(() => Hotel, (hotel) => hotel.rooms, {
     nullable: false,
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'hotelId' })
+  @JoinColumn({ name: 'hotel_id' })
   hotel: Hotel;
 
-  @Column()
+  @Column({ name: 'hotel_id' })
   hotelId: number;
 
   @OneToMany(() => Reservation, (reservation) => reservation.room)

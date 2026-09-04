@@ -1,9 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsInt, IsNotEmpty, IsString, IsUUID, Min } from 'class-validator';
+import {
+  IsEnum,
+  IsInt,
+  IsNotEmpty,
+  IsString,
+  IsUUID,
+  Min,
+} from 'class-validator';
 import { RoomStatus, RoomType } from '../entities/room.entity';
 
 export class CreateRoomDto {
-  @ApiProperty({ description: 'ID público del hotel al que pertenece', example: '550e8400-e29b-41d4-a716-446655440000' })
+  @ApiProperty({
+    description: 'ID público del hotel al que pertenece',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
   @IsUUID()
   @IsNotEmpty()
   hotelPublicId: string;
@@ -13,7 +23,11 @@ export class CreateRoomDto {
   @IsNotEmpty()
   number: string;
 
-  @ApiProperty({ description: 'Estado inicial', enum: RoomStatus, default: RoomStatus.AVAILABLE })
+  @ApiProperty({
+    description: 'Estado inicial',
+    enum: RoomStatus,
+    default: RoomStatus.AVAILABLE,
+  })
   @IsEnum(RoomStatus)
   status: RoomStatus = RoomStatus.AVAILABLE;
 
@@ -25,4 +39,9 @@ export class CreateRoomDto {
   @IsInt()
   @Min(1)
   basePrice: number;
+
+  @ApiProperty({ description: 'Capacidad máxima de huéspedes', example: 2 })
+  @IsInt()
+  @Min(1)
+  capacity: number;
 }

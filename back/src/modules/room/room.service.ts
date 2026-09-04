@@ -1,8 +1,13 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 import { Repository } from 'typeorm';
-import { Room } from './entities/room.entity';
+import { Room, RoomStatus } from './entities/room.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RoomResponseDto } from './dto/room-response.dto';
 import { plainToInstance } from 'class-transformer';
@@ -10,6 +15,8 @@ import { PaginationService } from '../../common/pagination/pagination.service';
 import { PaginationDto } from '../../common/pagination/dto/pagination.dto';
 import { PaginatedResult } from '../../common/pagination/dto/paginated-result.dto';
 import { HotelService } from '../hotel/hotel.service';
+import { AvailabilityQueryDto } from './dto/availability-query.dto';
+import { isValidRange } from '../../common/utils/dates';
 
 @Injectable()
 export class RoomService {
@@ -66,6 +73,68 @@ export class RoomService {
 
     return {
       data: roomsDto,
+      meta,
+    };
+  }
+
+  /**
+   * Habitaciones libres para un rango de fechas: estado AVAILABLE,
+   * capacidad suficiente y sin reservas activas solapadas.
+   */
+  async findAvailable(
+    query: AvailabilityQueryDto,
+  ): Promise<PaginatedResult<RoomResponseDto>> {
+    const { checkIn, checkOut, guests = 1, city, type, hotelPublicId } = query;
+
+    if (!isValidRange(checkIn, checkOut)) {
+      throw new BadRequestException(
+        'checkOut debe ser una fecha posterior a checkIn (formato YYYY-MM-DD)',
+      );
+    }
+
+    const queryBuilder = this.roomRepository
+      .createQueryBuilder('room')
+      .leftJoinAndSelect('room.hotel', 'hotel')
+      .where('room.status = :available', {
+        available: RoomStatus.AVAILABLE,
+      })
+      .andWhere('room.capacity >= :guests', { guests })
+      .andWhere(
+        `NOT EXISTS (
+          SELECT 1 FROM reservations r
+          WHERE r."room_id" = room.id
+            AND r.status IN ('PENDING', 'PAID')
+            AND r."deleted_at" IS NULL
+            AND r."check_in" < :checkOut
+            AND r."check_out" > :checkIn
+        )`,
+        { checkIn, checkOut },
+      )
+      .orderBy('room.basePrice', 'ASC');
+
+    if (city) {
+      queryBuilder.andWhere('hotel.city ILIKE :city', { city });
+    }
+    if (type) {
+      queryBuilder.andWhere('room.type = :type', { type });
+    }
+    if (hotelPublicId) {
+      queryBuilder.andWhere('hotel.publicId = :hotelPublicId', {
+        hotelPublicId,
+      });
+    }
+
+    const { data, meta } = await this.paginationService.paginate(
+      queryBuilder,
+      query,
+    );
+
+    return {
+      data: data.map((room) =>
+        plainToInstance(RoomResponseDto, room, {
+          excludeExtraneousValues: true,
+        }),
+      ),
       meta,
     };
   }

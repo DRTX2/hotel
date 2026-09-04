@@ -39,6 +39,13 @@ export class RoomResponseDto {
   basePrice: number;
 
   @ApiProperty({
+    description: 'Capacidad máxima de huéspedes',
+    example: 2,
+  })
+  @Expose()
+  capacity: number;
+
+  @ApiProperty({
     description: 'Fecha de creación',
     example: '2024-05-01T10:00:00Z',
   })

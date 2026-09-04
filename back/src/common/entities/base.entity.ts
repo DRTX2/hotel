@@ -9,19 +9,21 @@ import {
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 
-export abstract class BaseEntity { // ver si mejor lo elimino
+export abstract class BaseEntity {
+  // Las columnas se mapean explícitamente a snake_case porque la
+  // migración inicial (aplicada, inmutable) usa ese convenio.
   @ApiProperty({
     description: 'ID interno del registro',
     example: 1,
   })
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ name: 'id' })
   id: number;
 
   @ApiProperty({
     description: 'ID público único del registro (UUID)',
     example: '550e8400-e29b-41d4-a716-446655440000',
   })
-  @Column({ type: 'uuid', unique: true })
+  @Column({ name: 'public_id', type: 'uuid', unique: true })
   @Generated('uuid')
   @Expose()
   publicId: string;
@@ -30,7 +32,7 @@ export abstract class BaseEntity { // ver si mejor lo elimino
     description: 'Fecha de creación del registro',
     example: '2024-01-15T10:30:00Z',
   })
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   @Expose()
   createdAt: Date;
 
@@ -38,7 +40,7 @@ export abstract class BaseEntity { // ver si mejor lo elimino
     description: 'Fecha de última actualización del registro',
     example: '2024-01-15T10:30:00Z',
   })
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   @Expose()
   updatedAt: Date;
 
@@ -46,7 +48,7 @@ export abstract class BaseEntity { // ver si mejor lo elimino
     description: 'Fecha de eliminación lógica (si aplica)',
     required: false,
   })
-  @DeleteDateColumn()
+  @DeleteDateColumn({ name: 'deleted_at' })
   @Expose()
   deletedAt?: Date;
 }
