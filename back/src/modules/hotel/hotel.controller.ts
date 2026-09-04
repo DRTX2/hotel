@@ -20,18 +20,14 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { HotelService } from './hotel.service';
-import { Hotel } from './entities/hotel.entity';
 import { CreateHotelDto } from './dto/create-hotel.dto';
+import { Public } from '../auth/decorators/public.decorator';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../auth/entities/user.entity';
 import { UpdateHotelDto } from './dto/update-hotel.dto';
-import {
-  HotelResponseDto,
-} from './dto/hotel-response.dto';
-import {
-  PaginationDto,
-} from '../../common/pagination/dto/pagination.dto';
-import {
-  PaginatedResult,
-} from '../../common/pagination/dto/paginated-result.dto';
+import { HotelResponseDto } from './dto/hotel-response.dto';
+import { PaginationDto } from '../../common/pagination/dto/pagination.dto';
+import { PaginatedResult } from '../../common/pagination/dto/paginated-result.dto';
 
 @ApiTags('hotels')
 @Controller('hotels')
@@ -39,6 +35,7 @@ export class HotelController {
   constructor(private readonly hotelService: HotelService) {}
 
   @Post()
+  @Roles(UserRole.STAFF)
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Crear un nuevo hotel' })
   @ApiResponse({
@@ -53,6 +50,7 @@ export class HotelController {
   }
 
   @Get()
+  @Public()
   @ApiOperation({ summary: 'Obtener lista paginada de hoteles' })
   @ApiResponse({
     status: 200,
@@ -66,6 +64,7 @@ export class HotelController {
   }
 
   @Get('search/city')
+  @Public()
   @ApiOperation({ summary: 'Buscar hoteles por ciudad' })
   @ApiQuery({ name: 'city', description: 'Nombre de la ciudad' })
   @ApiResponse({
@@ -79,6 +78,7 @@ export class HotelController {
   }
 
   @Get(':publicId')
+  @Public()
   @ApiOperation({ summary: 'Obtener un hotel por ID' })
   @ApiParam({ name: 'publicId', description: 'ID único del hotel' })
   @ApiResponse({
@@ -94,6 +94,7 @@ export class HotelController {
   }
 
   @Patch(':publicId')
+  @Roles(UserRole.STAFF)
   @ApiOperation({ summary: 'Actualizar un hotel' })
   @ApiParam({ name: 'publicId', description: 'ID único del hotel' })
   @ApiResponse({
@@ -112,6 +113,7 @@ export class HotelController {
   }
 
   @Delete(':publicId')
+  @Roles(UserRole.STAFF)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Eliminar un hotel' })
   @ApiParam({ name: 'publicId', description: 'ID único del hotel' })

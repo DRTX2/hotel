@@ -6,6 +6,8 @@ import { HotelModule } from './modules/hotel/hotel.module';
 import { RoomModule } from './modules/room/room.module';
 import { ReservationModule } from './modules/reservation/reservation.module';
 import { GuestModule } from './modules/guest/guest.module';
+import { HealthModule } from './modules/health/health.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -18,6 +20,8 @@ import { GuestModule } from './modules/guest/guest.module';
     RoomModule,
     ReservationModule,
     GuestModule,
+    HealthModule,
+    AuthModule,
   ],
   controllers: [],
   providers: [],

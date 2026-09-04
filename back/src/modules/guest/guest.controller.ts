@@ -18,16 +18,23 @@ import { UpdateGuestDto } from './dto/update-guest.dto';
 import { GuestResponseDto } from './dto/guest-response.dto';
 import { PaginationDto } from '../../common/pagination/dto/pagination.dto';
 import { PaginatedResult } from '../../common/pagination/dto/paginated-result.dto';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../auth/entities/user.entity';
 
 @ApiTags('guests')
 @Controller('guests')
+@Roles(UserRole.STAFF) // PII: todo el módulo exige staff+
 export class GuestController {
   constructor(private readonly guestService: GuestService) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Crear un nuevo huésped' })
-  @ApiResponse({ status: 201, description: 'Huésped creado', type: GuestResponseDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Huésped creado',
+    type: GuestResponseDto,
+  })
   create(@Body() createGuestDto: CreateGuestDto): Promise<GuestResponseDto> {
     return this.guestService.create(createGuestDto);
   }
@@ -35,7 +42,11 @@ export class GuestController {
   @Put(':publicId')
   @ApiOperation({ summary: 'Actualizar un huésped' })
   @ApiParam({ name: 'publicId', description: 'ID único del huésped' })
-  @ApiResponse({ status: 200, description: 'Huésped actualizado', type: GuestResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Huésped actualizado',
+    type: GuestResponseDto,
+  })
   update(
     @Param('publicId', ParseUUIDPipe) publicId: string,
     @Body() updateGuestDto: UpdateGuestDto,
@@ -46,7 +57,9 @@ export class GuestController {
   @Get()
   @ApiOperation({ summary: 'Listar huéspedes paginados' })
   @ApiResponse({ status: 200, type: PaginatedResult<GuestResponseDto> })
-  findAll(@Query() paginationDto: PaginationDto): Promise<PaginatedResult<GuestResponseDto>> {
+  findAll(
+    @Query() paginationDto: PaginationDto,
+  ): Promise<PaginatedResult<GuestResponseDto>> {
     return this.guestService.findAll(paginationDto);
   }
 
@@ -54,7 +67,9 @@ export class GuestController {
   @ApiOperation({ summary: 'Obtener un huésped por ID público' })
   @ApiParam({ name: 'publicId', description: 'ID único del huésped' })
   @ApiResponse({ status: 200, type: GuestResponseDto })
-  findOne(@Param('publicId', ParseUUIDPipe) publicId: string): Promise<GuestResponseDto> {
+  findOne(
+    @Param('publicId', ParseUUIDPipe) publicId: string,
+  ): Promise<GuestResponseDto> {
     return this.guestService.findOne(publicId);
   }
 
