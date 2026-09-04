@@ -21,12 +21,12 @@ export class HotelService {
   ) {}
 
   async create(createHotelDto: CreateHotelDto): Promise<HotelResponseDto> {
-      const hotel = this.hotelRepository.create(createHotelDto);
-      const savedHotel = await this.hotelRepository.save(hotel);
-      this.logger.log(`Hotel creado: ${savedHotel.publicId}`);
-      return plainToInstance(HotelResponseDto, savedHotel, {
-        excludeExtraneousValues: true,
-      });
+    const hotel = this.hotelRepository.create(createHotelDto);
+    const savedHotel = await this.hotelRepository.save(hotel);
+    this.logger.log(`Hotel creado: ${savedHotel.publicId}`);
+    return plainToInstance(HotelResponseDto, savedHotel, {
+      excludeExtraneousValues: true,
+    });
   }
 
   async findAll(

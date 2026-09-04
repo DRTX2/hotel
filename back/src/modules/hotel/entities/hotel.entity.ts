@@ -1,9 +1,4 @@
-import {
-  Entity,
-  Column,
-  Index,
-  OneToMany,
-} from 'typeorm';
+import { Entity, Column, Index, OneToMany } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { BaseEntity } from '../../../common/entities/base.entity';
 import { Room } from '../../room/entities/room.entity';

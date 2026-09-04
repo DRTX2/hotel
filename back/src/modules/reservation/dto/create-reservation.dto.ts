@@ -2,12 +2,18 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsDateString, IsInt, IsNotEmpty, IsUUID, Min } from 'class-validator';
 
 export class CreateReservationDto {
-  @ApiProperty({ description: 'ID público de la habitación', example: 'd8e4f1a0...' })
+  @ApiProperty({
+    description: 'ID público de la habitación',
+    example: 'd8e4f1a0...',
+  })
   @IsUUID()
   @IsNotEmpty()
   roomPublicId: string;
 
-  @ApiProperty({ description: 'ID público del huésped', example: 'd8e4f1a0...' })
+  @ApiProperty({
+    description: 'ID público del huésped',
+    example: 'd8e4f1a0...',
+  })
   @IsUUID()
   @IsNotEmpty()
   guestPublicId: string;

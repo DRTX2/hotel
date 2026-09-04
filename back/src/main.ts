@@ -1,28 +1,62 @@
+import './config/load-env';
 import 'reflect-metadata';
 // sirve para metadata, decoradores, typeORM, class validator/transformer
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
+import rateLimit, { Store } from 'express-rate-limit';
+import Redis from 'ioredis';
+import { RedisStore } from 'rate-limit-redis';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import { env } from './config/env';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule); // inicia contenedor de dependencias, crea la app express(se puede cambiar a fastify) y construye un grafo de dependencias.
+  const app = await NestFactory.create<NestExpressApplication>(AppModule); // inicia contenedor de dependencias y construye el grafo
+  app.set('trust proxy', 1); // necesario para rate-limit correcto tras proxy/LB
 
-  const logger = new Logger('Bootstrap'); // luego se puede cambiar a pino/winston/logger estructurado json
+  const logger = new Logger('Bootstrap'); // TODO: Pino/Winston con formato JSON + correlation-id
 
   // Seguridad
-  app.use(helmet()); // helmet agrega headers de seguridad para prevenir ataques
-  app.enableCors(); // de momento aceptara cualquier origen
-  app.use( // finalmente un rate limiter, luego cambiarlo por redis store y api gateway
+  app.use(helmet()); // headers de seguridad
+  app.enableCors({
+    origin: env.corsOrigins, // orígenes explícitos por env, nunca '*'
+    credentials: true,
+  });
+
+  // Rate-limit: Redis en producción/compose, memoria solo como fallback local
+  let store: Store | undefined;
+  if (env.redisUrl) {
+    try {
+      const redis = new Redis(env.redisUrl, {
+        maxRetriesPerRequest: 2,
+        enableReadyCheck: true,
+      });
+      await redis.ping();
+      store = new RedisStore({
+        // rate-limit-redis v4 espera sendCommand estilo node-redis
+        sendCommand: (...args: string[]): Promise<any> =>
+          redis.call(args[0], ...args.slice(1)),
+      });
+      logger.log('Rate-limit store: redis');
+    } catch (err) {
+      logger.warn(
+        `Redis no disponible, rate-limit en memoria: ${(err as Error).message}`,
+      );
+    }
+  }
+  app.use(
     rateLimit({
-      windowMs: 15 * 60 * 1000, // 15 minutos
-      max: 100, // limita cada IP a 100 peticiones por ventana
+      windowMs: env.rateLimit.windowMs,
+      max: env.rateLimit.max,
+      standardHeaders: 'draft-8',
+      legacyHeaders: false,
+      ...(store ? { store } : {}),
       message:
-        'Demasiadas peticiones desde esta IP, por favor intente después de 15 minutos',
+        'Demasiadas peticiones desde esta IP, por favor intente más tarde',
     }),
   );
 
@@ -31,39 +65,36 @@ async function bootstrap() {
     .setTitle('Hotel API')
     .setDescription('API para gestión de hoteles')
     .setVersion('1.0')
-    .addBearerAuth() // Si añades JWT después
+    .addBearerAuth() // JWT (Sprint 2)
     .build();
 
   const document = SwaggerModule.createDocument(app, config); // escanea app
   SwaggerModule.setup('api', app, document);
 
-  // Prefijo Global, para versionado pro uri, se puede usar header versioning y versionado por controller.
+  // Prefijo Global para versionado por URI
   app.setGlobalPrefix('v1');
 
   // Filtro Global de Excepciones
   app.useGlobalFilters(new AllExceptionsFilter());
 
-  // Interceptor Global de Logging, no incluir logica
+  // Interceptor Global de Logging
   app.useGlobalInterceptors(new LoggingInterceptor());
 
-  // Validación global corregida
+  // Validación global estricta
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true, // elimina lo que no este
       forbidNonWhitelisted: true, // error si se envia lo que no debia
       transform: true, // conversion automatica de tipado
       transformOptions: {
-        enableImplicitConversion: true, // permite conversion automaticas sin decoradores explicitos, util para que Swagger y JSON funcionen bien
+        enableImplicitConversion: true,
       },
     }),
   );
 
-  const port = process.env.PORT ?? 3000;
-  await app.listen(port);
+  await app.listen(env.port);
 
-  logger.log(`🚀 Application is running on: http://localhost:${port}/v1`);
-  logger.log(
-    `📚 Swagger documentation available at: http://localhost:${port}/api`,
-  );
+  logger.log(`Application running on: http://localhost:${env.port}/v1`);
+  logger.log(`Swagger docs at: http://localhost:${env.port}/api`);
 }
-bootstrap();
+void bootstrap();

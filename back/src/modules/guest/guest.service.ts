@@ -29,7 +29,10 @@ export class GuestService {
     });
   }
 
-  async update(publicId: string, updateGuestDto: UpdateGuestDto): Promise<GuestResponseDto> {
+  async update(
+    publicId: string,
+    updateGuestDto: UpdateGuestDto,
+  ): Promise<GuestResponseDto> {
     const guest = await this.findOneEntity(publicId);
     this.guestRepository.merge(guest, updateGuestDto);
     const updatedGuest = await this.guestRepository.save(guest);
@@ -55,8 +58,12 @@ export class GuestService {
     return guest;
   }
 
-  async findAll(paginationDto: PaginationDto): Promise<PaginatedResult<GuestResponseDto>> {
-    this.logger.log(`Obteniendo huéspedes: página ${paginationDto.page}, límite ${paginationDto.limit}`);
+  async findAll(
+    paginationDto: PaginationDto,
+  ): Promise<PaginatedResult<GuestResponseDto>> {
+    this.logger.log(
+      `Obteniendo huéspedes: página ${paginationDto.page}, límite ${paginationDto.limit}`,
+    );
 
     const queryBuilder = this.guestRepository
       .createQueryBuilder('guest')

@@ -1,4 +1,4 @@
-import { PaginationMetaDto } from "./pagination-meta.dto";
+import { PaginationMetaDto } from './pagination-meta.dto';
 
 export class PaginatedResult<T> {
   data: T[];

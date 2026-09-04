@@ -1,19 +1,34 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+} from 'class-validator';
 
 export class CreateGuestDto {
-  @ApiProperty({ description: 'Nombre completo del huésped', example: 'Juan Pérez' })
+  @ApiProperty({
+    description: 'Nombre completo del huésped',
+    example: 'Juan Pérez',
+  })
   @IsString()
   @IsNotEmpty()
   @MaxLength(150)
   fullName: string;
 
-  @ApiProperty({ description: 'Correo electrónico', example: 'juan@example.com' })
+  @ApiProperty({
+    description: 'Correo electrónico',
+    example: 'juan@example.com',
+  })
   @IsEmail()
   @IsNotEmpty()
   email: string;
 
-  @ApiPropertyOptional({ description: 'Teléfono de contacto', example: '+34 600000000' })
+  @ApiPropertyOptional({
+    description: 'Teléfono de contacto',
+    example: '+34 600000000',
+  })
   @IsString()
   @IsOptional()
   @MaxLength(20)

@@ -11,7 +11,7 @@ export class PaginationService {
     paginationDto: PaginationDto,
   ): Promise<PaginatedResult<T>> {
     const page = paginationDto.page ?? 1;
-    const limit = Math.max(paginationDto.limit ?? 10,1);
+    const limit = Math.max(paginationDto.limit ?? 10, 1);
     const skip = (page - 1) * limit;
 
     queryBuilder.skip(skip).take(limit);
@@ -29,6 +29,6 @@ export class PaginationService {
       hasPreviousPage: page > 1,
     };
 
-    return {data, meta};
+    return { data, meta };
   }
 }
